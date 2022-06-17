@@ -6,6 +6,8 @@ library(readxl)
 library(tidyverse)
 library(grid)
 
+#p-value function- returns less than 0.01 if a p-value is small
+p_report <- function(p){ifelse(p>0.01,p,paste("<0.01")) }
 
 # Importing data ####
 CHI_cont <- read_excel(path="/Users/markkelson/Dropbox/CHI/Code/CHIdatacontinuous.xlsx",sheet=1)
@@ -17,20 +19,25 @@ summarydat[summarydat=="NA"] <- "Missing"
 summarydat$Perc_Female <- as.numeric(summarydat$Perc_Female)
 
 #Getting non-alphabetical order to some of the variables
-#Caseload
-summarydat$CM_Caseload <- factor(summarydat$CM_Caseload,levels = c("Light","Medium","High","Missing"))
+#Caseload (putting light towards the end)
+summarydat$CM_Caseload <- factor(summarydat$CM_Caseload,levels = c("Medium","High","Missing","Light"))
 #Frequency
 summarydat$CM_Frequency <- factor(summarydat$CM_Frequency,levels = c("Occasional","Medium","Frequent","VeryFrequent","Missing"))
 #Timelimit
 summarydat$CM_Time_limit <- factor(summarydat$CM_Time_limit,levels = c("Short","Medium","Long","Missing"))
 #Complexity
-summarydat$CM_Complexity <- factor(summarydat$CM_Complexity,levels = c("Low","Medium","High","Medium/High","Missing"))
+summarydat$CM_Complexity <- factor(summarydat$CM_Complexity,levels = c("Medium","High","Medium/High","Missing","Low"))
 #Availability
 summarydat$CM_Availability <- factor(summarydat$CM_Availability,levels = c("OfficeHours","High","Missing"))
 #Remote
 summarydat$CM_Remote <- factor(summarydat$CM_Remote,levels = c("Remote","In-person","Both","Missing"))
 #CM_Type
 summarydat$CM_Type <- factor(summarydat$CM_Type,levels = c("HousingFirst","AssertiveCommunityTreatment","CriticalTimeIntervention","IntensiveCaseManagement","StandardCaseManagement"))
+#CM_Team
+summarydat$CM_Team <- factor(summarydat$CM_Team,levels = c("Individual","Team","Both"))
+#CM_Team
+summarydat$CM_Continuity <- factor(summarydat$CM_Continuity,levels = c("Named","No_dedicated_manager","Missing"))
+
 
 #Reading in binary data
 CHI_bin <- read_excel(path="/Users/markkelson/Dropbox/CHI/Code/CHIdatabinary.xlsx",sheet=1)
@@ -164,13 +171,13 @@ m_cont_homeless_long_CM_Type <- metacont(data=CHI_cont_homeless_long,
                                   byvar=CM_Type)
 
 png(file = '/Users/markkelson/Dropbox/CHI/Code/Homelessness_long_CM_Type.png',
-    height=870,width=800) 
+    height=950,width=800) 
 
 forest(m_cont_homeless_long_CM_Type,digits.mean=1,digits.sd=1,
        label.left = "Favours intervention",
        label.right = "Favours control")
 
-grid.text("Homelessness outcomes one year or longer\nsplit by case management type", .5, 0.97, gp=gpar(cex=2))
+grid.text("Homelessness outcomes one year or longer\nsplit by case management type", .5, 0.95, gp=gpar(cex=2))
 
 dev.off()
 
@@ -212,9 +219,14 @@ forest(m_cont_homeless_long_CM_Team,digits.mean=1,digits.sd=1,
        label.left = "Favours intervention",
        label.right = "Favours control")
 
-grid.text("Homelessness outcomes one year or longer\nsplit by group/individual", .5, 0.95, gp=gpar(cex=2))
+grid.text("Homelessness outcomes one year or longer\nsplit by team/individual", .5, 0.95, gp=gpar(cex=2))
 
 dev.off()
+
+#Metaregression to formally compare
+m_reg_cont_homeless_long_CM_Team <- metareg(m_cont_homeless_long,~CM_Team)
+summary(m_reg_cont_homeless_long_CM_Team)
+
 
 ###
 #Question Homelessness more than 1 year followup by manager###
@@ -287,6 +299,11 @@ grid.text("Homelessness outcomes one year or longer\nsplit by continuity", .5, 0
 
 dev.off()
 
+#Metaregression to formally compare
+m_reg_cont_homeless_long_CM_Continuity <- metareg(m_cont_homeless_long,~CM_Continuity)
+summary(m_reg_cont_homeless_long_CM_Continuity)
+
+
 ###
 #Question Homelessness more than 1 year followup by caseload###
 m_cont_homeless_long_CM_Caseload <- metacont(data=CHI_cont_homeless_long,
@@ -310,6 +327,11 @@ forest(m_cont_homeless_long_CM_Caseload,digits.mean=1,digits.sd=1,
 grid.text("Homelessness outcomes one year or longer\nsplit by caseload", .5, 0.95, gp=gpar(cex=2))
 
 dev.off()
+
+#Metaregression to formally compare
+m_reg_cont_homeless_long_CM_Caseload <- metareg(m_cont_homeless_long,~CM_Caseload)
+summary(m_reg_cont_homeless_long_CM_Caseload)
+
 
 ###
 #Question Homelessness more than 1 year followup by frequency of contact###
@@ -514,7 +536,9 @@ m_bin_homeless_short <- metabin(data=CHI_bin_homeless_short,
                                   n.c=n.c,
                                   studlab=Author,
                                   sm="RR",
-                                  hakn=T)
+                                  hakn=T,
+                                method.tau="HE"
+                                )
 
 png(file = '/Users/markkelson/Dropbox/CHI/Code/Homelessness_bin_short.png',height=400,width=900) 
 
@@ -525,6 +549,34 @@ forest(m_bin_homeless_short,digits.mean=1,digits.sd=1,
 grid.text("Binary homelessness outcome less than 1 year", .5, .9, gp=gpar(cex=2))
 
 dev.off()
+
+# Question Homelessness binary 1 year or longer followup ####
+CHI_bin_homeless_long <- CHIreviewdatbin[CHIreviewdatbin$Outcome_category=="Homelessness"&
+                                              CHIreviewdatbin$Order==1&
+                                              CHIreviewdatbin$Followup_months>=12&
+                                              CHIreviewdatbin$Control=="UsualCare",]
+
+m_bin_homeless_long <- metabin(data=CHI_bin_homeless_long,
+                                event.e=event.e,
+                                n.e=n.e,
+                                event.c=event.c,
+                                n.c=n.c,
+                                studlab=Author,
+                                sm="RR",
+                                hakn=T,method.tau="HE")
+
+png(file = '/Users/markkelson/Dropbox/CHI/Code/Homelessness_bin_long.png',height=400,width=900) 
+
+forest(m_bin_homeless_long,digits.mean=1,digits.sd=1,
+       label.left = "Favours intervention",
+       label.right = "Favours control") 
+
+grid.text("Binary homelessness outcome 1 year or longer", .5, .9, gp=gpar(cex=2))
+
+dev.off()
+
+
+
 
 
 
@@ -542,13 +594,40 @@ CHI_geninv_summary <- merge(CHI_geninv,summarydat,by.y="Author")
 CHI_geninv_merged <- merge(CHIreviewdat,CHI_geninv_summary,all.x=T,all.y=T)
 #Merging study level information in ####
 
+#Gen inv short
+CHI_geninv_homeless_short <- CHI_geninv_merged[CHI_geninv_merged$Outcome_category=="Homelessness"&
+                                                  CHI_geninv_merged$Order==1&
+                                                  CHI_geninv_merged$Followup_months<12&
+                                                  CHI_geninv_merged$Control=="UsualCare",]
 
+# Gen InvQuestion Homelessness less than 1 year followup ####
+
+m_geninv_homeless_short <- metagen(data=CHI_geninv_homeless_short,
+                                  TE=TE,
+                                  seTE=seTE,
+                                  studlab=Author,
+                                  sm="SMD",
+                                  hakn=T)
+
+png(file = '/Users/markkelson/Dropbox/CHI/Code/Gen_inv_Homelessness_short.png',height=900,width=900) 
+
+forest(m_geninv_homeless_short,digits.mean=1,digits.sd=1,
+       label.left = "Favours intervention",
+       label.right = "Favours control") 
+
+grid.text("Generic inverse variance - Homelessness outcome less than 12 months", .5, .9, gp=gpar(cex=2))
+
+dev.off()
+
+
+
+#Gen inv long
 CHI_geninv_homeless_long <- CHI_geninv_merged[CHI_geninv_merged$Outcome_category=="Homelessness"&
                                               CHI_geninv_merged$Order==1&
                                               CHI_geninv_merged$Followup_months>=12&
                                               CHI_geninv_merged$Control=="UsualCare",]
 
-# Gen InvQuestion Homelessness less than 1 year followup ####
+# Gen InvQuestion Homelessness 1 year or more followup ####
 
 m_geninv_homeless_long <- metagen(data=CHI_geninv_homeless_long,
                                   TE=TE,
@@ -567,7 +646,7 @@ grid.text("Generic inverse variance - Homelessness outcome one year or longer", 
 
 dev.off()
 
-# Gen InvQuestion Homelessness less than 1 year followup ####
+# Gen InvQuestion Homelessness  1 year or more followup ####
 
 m_geninv_homeless_long_CM_Type <- metagen(data=CHI_geninv_homeless_long,
                                   TE=TE,
@@ -674,7 +753,7 @@ dev.off()
 
 
 ####
-#Question Mental Health more than 1 year followup by team/individual###
+#Question Mental Health more than 1 year followup by case management type###
 m_cont_MH_long_CM_Type <- metacont(data=CHI_cont_MH_long,
                                    mean.e=Me,
                                    sd.e=Se,
@@ -687,13 +766,13 @@ m_cont_MH_long_CM_Type <- metacont(data=CHI_cont_MH_long,
                                    hakn=T,
                                    byvar=CM_Type)
 
-png(file = '/Users/markkelson/Dropbox/CHI/Code/MH_long_CM_Type.png',height=900,width=900) 
+png(file = '/Users/markkelson/Dropbox/CHI/Code/MH_long_CM_Type.png',height=650,width=900) 
 
 forest(m_cont_MH_long_CM_Type,digits.mean=1,digits.sd=1,
        label.left = "Favours intervention",
        label.right = "Favours control")
 
-grid.text("Mental Health outcomes one year or longer\nsplit by case management type", .5, 0.85, gp=gpar(cex=2))
+grid.text("Mental Health outcomes one year or longer\nsplit by case management type", .5, 0.95, gp=gpar(cex=2))
 
 dev.off()
 
@@ -724,13 +803,13 @@ m_cont_MH_long_CM_Team <- metacont(data=CHI_cont_MH_long,
                                     hakn=T,
                                     byvar=CM_Team)
 
-png(file = '/Users/markkelson/Dropbox/CHI/Code/MH_long_CM_Team.png',height=900,width=900) 
+png(file = '/Users/markkelson/Dropbox/CHI/Code/MH_long_CM_Team.png',height=700,width=900) 
 
 forest(m_cont_MH_long_CM_Team,digits.mean=1,digits.sd=1,
        label.left = "Favours intervention",
        label.right = "Favours control")
 
-grid.text("Mental Health outcomes one year or longer\nsplit by team/individual case manager", .5, 0.8, gp=gpar(cex=2))
+grid.text("Mental Health outcomes one year or longer\nsplit by team/individual case manager", .5, 0.95, gp=gpar(cex=2))
 
 dev.off()
 
@@ -795,13 +874,13 @@ m_cont_MH_long_CM_Continuity <- metacont(data=CHI_cont_MH_long,
                                                    hakn=T,
                                                    byvar=CM_Continuity)
 
-png(file = '/Users/markkelson/Dropbox/CHI/Code/MH_long_CM_Continuity.png',height=900,width=900) 
+png(file = '/Users/markkelson/Dropbox/CHI/Code/MH_long_CM_Continuity.png',height=700,width=900) 
 
 forest(m_cont_MH_long_CM_Continuity,digits.mean=1,digits.sd=1,
        label.left = "Favours intervention",
        label.right = "Favours control")
 
-grid.text("Mental Health outcomes one year or longer\nsplit by continuity", .5, 0.85, gp=gpar(cex=2))
+grid.text("Mental Health outcomes one year or longer\nsplit by continuity", .5, 0.95, gp=gpar(cex=2))
 
 dev.off()
 
@@ -978,16 +1057,16 @@ dev.off()
 #Question Mental Health more than 1 year followup by gender###
 
 
-m_reg_cont_homeless_long_Perc_Female <- metareg(m_cont_MH_long,~Perc_Female)
+m_reg_cont_MH_long_Perc_Female <- metareg(m_cont_MH_long,~Perc_Female)
 
 png(file = '/Users/markkelson/Dropbox/CHI/Code/MH_long_Perc_Female_bubble.png',height=800,width=900) 
 
-bubble(m_reg_cont_homeless_long_Perc_Female,
+bubble(m_reg_cont_MH_long_Perc_Female,
        main="Mental Health outcomes for long term follow-up by % female",
        sub=paste("Slope = ",
-                 round(m_reg_cont_homeless_long_Perc_Female$beta[2],3),
+                 round(m_reg_cont_MH_long_Perc_Female$beta[2],3),
                  "p-value=",
-                 round(m_reg_cont_homeless_long_Perc_Female$pval[2],2)),
+                 round(m_reg_cont_MH_long_Perc_Female$pval[2],2)),
        xlab = "Percentage female participants",
        studlab=T)
 
@@ -1122,7 +1201,7 @@ grid.text("Physical Health outcomes less than 1 year", .5, .9, gp=gpar(cex=2))
 
 dev.off()
 
-# SubstanceUse Long####
+# Physical health Long####
 
 CHI_cont_PhysicalHealth_long <- CHIreviewdat[CHIreviewdat$Outcome_category=="PhysicalHealth"&
                                                CHIreviewdat$Order==1&
@@ -1185,7 +1264,7 @@ grid.text("Capabilities and wellbeing outcomes less than 1 year", .5, .9, gp=gpa
 
 dev.off()
 
-# SubstanceUse Long####
+# Capabilities and wellbeing Long####
 
 CHI_cont_CapabilitiesandWellbeing_long <- CHIreviewdat[CHIreviewdat$Outcome_category=="CapabilitiesandWellbeing"&
                                                            CHIreviewdat$Order==1&
@@ -1248,7 +1327,7 @@ grid.text("Employment outcomes less than 1 year", .5, .9, gp=gpar(cex=2))
 
 dev.off()
 
-# SubstanceUse Long####
+# Employment Long####
 
 CHI_cont_Employment_long <- CHIreviewdat[CHIreviewdat$Outcome_category=="Employment"&
                                              CHIreviewdat$Order==1&
