@@ -1,0 +1,462 @@
+---
+title: "CHI systematic review- Quantitative results"
+output:
+  word_document: default
+  pdf_document: default
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Methods
+
+Our analysis was conducted in line with our published protocol. We extracted quantitative information from eligible studies on outcomes addressing homelessness, mental health, access to health and social care services,
+physical health, substance use, crime/criminalisation, employment and income, capabilities and wellbeing and cost/cost-effectiveness of intervention. 
+
+We expected most of outcome data to be binary (i.e. outcomes with only two possible values. An example would be assessing whether participants were homeless: yes/no). This turned out not to be the case, with much more continuous outcome data available. Continuous variables are meaningful numbers (such as number of days spent homeless in the previous year). 
+
+Continuous outcomes were meta-analysed in two ways: firstly when summary information on the separate randomised groups was available it was analysed using random effects continuous meta-analysis (citation: Balduzzi S, Rücker G, Schwarzer G (2019), How to perform a meta-analysis with R: a practical tutorial, Evidence-Based Mental Health; 22: 153-160.). Secondly, a small number of studies reported between group effect estimates only. Equivalent between group effect estimates were calculated for the studies that reported information on the separate randomised groups and all of these effect estimates were meta-analysed using generic inverse variance methods. 
+
+Binary outcomes were analysed using the Mantel-Haenszel method implemented in the metabin function in the meta package. 
+
+The random effects approach assumes that the true treatment effects associated with each study are drawn from a distribution of possible effects. They are similar but not identical. In contrast, the fixed effects approach assumes that all of the studies are imperfect estimates of the exact same fixed effect estimate (i.e. the same number). Random effects models are more appropriate given the heterogeneity of studies (they all implement different interventions, have different inclusion criteria, durations, outcomes etc...), but fixed effects estimates are also provided for information. 
+
+Funnel plots explore publication bais where more than ten studies are included. A funnel plot presents the effect sizes for individual studies on the x-axis (standardised for comparability) against an increasing measure of study precision on the y-axis. As precision increases for a study, we expect that the observed treatment effect will converge towards the overall average (i.e. that is, more precise studies are expected to get closer to the true underlying treatment effect). This creates an inverted cone on the funnel plot, where we expect most of the studies to lie. Asymmetry in this plot indicates that some subgroup of studies is missing (e.g. perhaps small studies with small effects are systematically failing to reach the publication record). A formal test of asymmetry in this setting involves running a linear regression and testing whether the intercept goes through the origin (cite: https://www.bmj.com/content/315/7109/629).
+
+### Data extraction
+
+Quantitative data extraction relied primarily on information reported in the eligible papers. Protocol or sister publications were explored to add additional information on relevant components. Information was taken from tables or figures. Studies that employed cluster randomisation had their standard errors inflated assuming an ICC of 0.05. Where means and p-values/t-tests were reported, standard deviations were recovered assuming equal standard deviations between arms. The RevMan calculator was used to calculate standard deviations from standard errors. Multi-arm studies had control groups split (uneven total sample sizes were rounded down). No standard deviations needed to be imputed. All information regarding the quantitative data extraction is available at https://github.com/MarkKelson/CHI_analysis. 
+
+## Executive summary
+
+```{r, include=FALSE}
+source("CHI_analysis.R", local = knitr::knit_global())
+# or sys.source("your-script.R", envir = knitr::knit_global())
+```
+
+Overall, we found that case management of any description was superior to usual care for outcomes assessing both homelessness and capabilities & wellbeing, but was ineffective for individual's mental health, substance use outcomes, physical health, and employment. Homelessness and mental health were addressed in the most studies and allowed the exploration of case management types and components. 
+
+For homelessness outcomes Housing First had the largest observed impact, followed by Assertive Case Management, Critical Time Intervention and finally Intensive Case Management (albeit the only statistically significant difference was between Housing First and Intensive Case Management). 
+
+None of the other components of case management produced statistically significant differences for homelessness.
+
+<!-- There was evidence that team and individual case management were similarly effective. Manager caseload was not observed to influence homelessness outcomes. Interventions with medium lengths of service provision (more than 6 months but less than 3 years) produced bigger positive effects on homelessness than interventions with longer lengths of service provision, in-person case management produced bigger positive effects than mixed (in-person and remote) and studies in people with high complexity of need produced bigger positive effects than studies in people with medium complexity of needs  (none of these differences attained statistical significance however).   -->
+
+The results for mental health outcomes were characterised by a remarkable lack of effect across all case management types and components. 
+
+There were not enough studies exploring our secondary outcomes to explore differences in case management types or components. 
+
+
+```{r eval=T,echo=F, fig.align="center",out.width="85%", fig.cap="",echo=F, warning=F,message=F}
+library(tidyverse)
+library(knitr)
+library(ggplot2)
+library(png)
+library(readxl)
+counter <- 1
+#include_graphics("/Users/markkelson/Dropbox/CHI/Code/Homelessness.png")
+```
+
+
+```{r eval=T,echo=F,tab.cap ="Table 1: Summary of results"}
+EST <- read_xlsx(path="/Users/markkelson/Dropbox/CHI/Code/ExecutiveSummaryTable.xlsx")
+kable(EST)
+```
+## Homelessness outcomes
+
+### Figure `r counter` Homelessness outcomes less than one year
+<!--- ```{r eval=T,echo=F, fig.cap="Homelessness outcomes less than 12 monthsXXX"} --->
+```{r eval=T,echo=F}
+include_graphics("/Users/markkelson/Dropbox/CHI/Code/Homelessness_short.png")
+counter <- counter+1
+temp <- m_cont_homeless_short
+```
+
+Figure `r counter-1` shows that the overall estimate of effectiveness was `r round(temp$TE.random,2)`, favouring case management, `r ifelse(temp$pval.random<0.05,"and was statistically significant","but was not statistically significant")` (p-value = `r round(temp$pval.random,3)`). This means that case management of any type improves short term (less than 12 months) homelessness outcomes by about half of a standard deviation (estimate: `r round(temp$TE.random,2)`) (while this was not statistically significant, the confidence interval excludes estimates of substantial detrimental effects on homelessness (95% CI: [`r round(temp$lower.random,2)`,`r round(temp$upper.random,2)`]).  Heterogeneity was `r ifelse(temp$I2>.7,"high","moderate")` ($I^2$=`r round(temp$I2,2)`). Despite this high heterogeneity, most of the individual study treatment effects favour intervention providing some confidence in this finding.
+
+### Figure `r counter` Homelessness outcomes 12 months or longer
+
+```{r eval=T,echo=F}
+include_graphics("/Users/markkelson/Dropbox/CHI/Code/Homelessness_long.png")
+counter <- counter+1
+temp <- m_cont_homeless_long
+```
+
+Figure `r counter-1` shows that the overall estimate of effectiveness was `r round(temp$TE.random,2)`, favouring case management, `r ifelse(temp$pval.random<0.05,"and was statistically significant","but was not statistically significant")` (p-value : `r p_report(round(temp$pval.random,3))`). This means that case management of any type improves long term (12 months or longer) homelessness outcomes by about half of a standard deviation (estimate: `r round(temp$TE.random,2)`, 95% CI: [`r round(temp$lower.random,2)`,`r round(temp$upper.random,2)`]). Heterogeneity was `r ifelse(temp$I2>.7,"high","moderate")` ($I^2$=`r round(temp$I2,2)`). Again, despite this high heterogeneity, the studies consistently favour intervention. 
+
+### Figure `r counter` Funnel plot for homelessness outcomes 12 months or longer
+
+```{r eval=T,echo=F}
+include_graphics("/Users/markkelson/Dropbox/CHI/Code/Homelessness_long_funnel.png")
+counter <- counter+1
+```
+
+Figure `r counter-1` indicates that there is no evidence of publication bias, with most of the studies symmetrically distributed within the funnel. The formal test for asymmetry in this plot indicated a p-value of `r round(homelesslong_egger$p.value,2)`. 
+
+
+
+### Figure `r counter` Homelessness outcomes 12 months or longer split by case management type
+```{r eval=T,echo=F}
+include_graphics("/Users/markkelson/Dropbox/CHI/Code/Homelessness_long_CM_Type.png")
+counter <- counter+1
+temp <- m_cont_homeless_long_CM_Type
+temp_sum <- summary.meta(temp)
+#extracting subgroup estimates
+subgroup_TE <- round(temp_sum$within.random$TE,2)
+subgroup_lower <- round(temp_sum$within.random$lower,2)
+subgroup_upper <- round(temp_sum$within.random$upper,2)
+
+```
+
+Continuous outcomes with longer follow-up had enough studies included to allow us to explore types and components of case management interventions. Figure `r counter-1` shows that case management subgroup effectiveness was `r subgroup_TE[1]` (95\% CI: [`r subgroup_lower[1]`,`r subgroup_upper[1]`]) for Housing First, `r subgroup_TE[2]` (95\% CI: [`r subgroup_lower[2]`,`r subgroup_upper[2]`]) for Assertive Community Treatment, `r subgroup_TE[3]`(95\% CI: [`r subgroup_lower[3]`,`r subgroup_upper[3]`]) for Critical Time Intervention and `r subgroup_TE[4]` (95\% CI: [`r subgroup_lower[4]`,`r subgroup_upper[4]`]) for Intensive Case management. These effects are all expressed in standard deviations of the chosen outcome variable. The outcome for Aubry2016 for example was the percentage of time housed in the previous three months and both arms had observed standard deviations of about 45\%. For such an outcome, the average effect size (for the Housing First subgroup) was 80\% of 45\% (equating to a reduction of 36\% in time spent homeless). The only statistically significant difference was between the largest and smallest of these effects (Housing First v Intensive Case Management, p-value = `r round(m_reg_cont_homeless_long_CM_Type$pval[4],2)`).
+
+### Figure `r counter` Homelessness outcomes 12 months or longer split by team or individual case management
+```{r eval=T,echo=F}
+include_graphics("/Users/markkelson/Dropbox/CHI/Code/Homelessness_long_CM_Team.png")
+counter <- counter+1
+temp <- m_cont_homeless_long_CM_Team
+temp_sum <- summary.meta(temp)
+#extracting subgroup estimates
+subgroup_TE <- round(temp_sum$within.random$TE,2)
+subgroup_lower <- round(temp_sum$within.random$lower,2)
+subgroup_upper <- round(temp_sum$within.random$upper,2)
+mr_sum <- summary(m_reg_cont_homeless_long_CM_Team)
+
+```
+
+Figure `r counter-1` shows that team or individual provision subgroup effectiveness was `r subgroup_TE[2]` (95% CI: [`r subgroup_lower[2]`,`r subgroup_upper[2]`]) for Individual, `r subgroup_TE[3]` (95% CI: [`r subgroup_lower[3]`,`r subgroup_upper[3]`]) for Team. There is no evidence of a difference between these effects (estimate: `r round(mr_sum$beta[2],2)`, 95\% CI: [`r round(mr_sum$ci.lb[2],2)`,`r round(mr_sum$ci.ub[2],2)`], p-value = `r round(m_reg_cont_homeless_long_CM_Team$pval[2],2)`). There was a large subgroup of studies which did not report this information (this was consistently observed for most of the components we explored).
+
+### Figure `r counter` Homelessness outcomes 12 months or longer split by continuity
+```{r eval=T,echo=F}
+include_graphics("/Users/markkelson/Dropbox/CHI/Code/Homelessness_long_CM_Continuity.png")
+counter <- counter+1
+temp <- m_cont_homeless_long_CM_Continuity
+temp_sum <- summary.meta(temp)
+subgroup_TE <- round(temp_sum$within.random$TE,2)
+subgroup_lower <- round(temp_sum$within.random$lower,2)
+subgroup_upper <- round(temp_sum$within.random$upper,2)
+```
+
+Figure `r counter-1` shows that continuity of care subgroup effectiveness was `r subgroup_TE[1]` (95\% CI: [`r subgroup_lower[1]`,`r subgroup_upper[1]`]) for a named case manager, and  `r subgroup_TE[2]` (95\% CI: [`r subgroup_lower[2]`,`r subgroup_upper[2]`]) for when there was no dedicated case manager. 
+The confidence intervals are largely overlapping for these subgroups however there is a statistically significant difference between them (estimate: `r round(m_reg_cont_homeless_long_CM_Continuity$beta[2],2)`, p-value: `r round(m_reg_cont_homeless_long_CM_Continuity$pval[2],2)`, 95% CI: [`r round(m_reg_cont_homeless_long_CM_Continuity$ci.lb[2],2)`, `r round(m_reg_cont_homeless_long_CM_Continuity$ci.ub[2],2)`]).
+
+### Figure `r counter` Homelessness outcomes 12 months or longer split by caseload
+```{r eval=T,echo=F}
+include_graphics("/Users/markkelson/Dropbox/CHI/Code/Homelessness_long_CM_Caseload.png")
+counter <- counter+1
+temp <- m_cont_homeless_long_CM_Caseload
+temp_sum <- summary.meta(temp)
+subgroup_TE <- round(temp_sum$within.random$TE,2)
+subgroup_lower <- round(temp_sum$within.random$lower,2)
+subgroup_upper <- round(temp_sum$within.random$upper,2)
+```
+
+Figure `r counter-1` shows that caseload subgroup effectiveness was `r subgroup_TE[1]` (95\% CI: [`r subgroup_lower[1]`,`r subgroup_upper[1]`]) for medium caseloads (8-20 people experiencing homelessness per case manager), and  `r subgroup_TE[2]` (95\% CI: [`r subgroup_lower[2]`,`r subgroup_upper[2]`]) for high case loads (21 or more people experiencing homelessness per case manager). The confidence intervals are wide and overlapping indicating that there is little evidence of a difference between these subgroups (estimate: `r round(m_reg_cont_homeless_long_CM_Caseload$beta[2],2)`, p-value: `r round(m_reg_cont_homeless_long_CM_Caseload$pval[2],2)`, 95\% CI:[`r round(m_reg_cont_homeless_long_CM_Caseload$ci.lb[2],2)`,`r round(m_reg_cont_homeless_long_CM_Caseload$ci.ub[2],2)`]).
+
+
+### Figure `r counter` Homelessness outcomes 12 months or longer split by time limit of provision
+```{r eval=T,echo=F}
+include_graphics("/Users/markkelson/Dropbox/CHI/Code/Homelessness_long_CM_Time_limit.png")
+counter <- counter+1
+temp <- m_cont_homeless_long_CM_Time_limit
+temp_sum <- summary.meta(temp)
+subgroup_TE <- round(temp_sum$within.random$TE,2)
+subgroup_lower <- round(temp_sum$within.random$lower,2)
+subgroup_upper <- round(temp_sum$within.random$upper,2)
+```
+
+Figure `r counter-1` shows that time limit of provision subgroup effectiveness was `r subgroup_TE[1]` (95\% CI: [`r subgroup_lower[1]`,`r subgroup_upper[1]`]) for medium time limits (more than 6 months but less than 3 years), and  `r round(temp$TE.random.w[2],2)` (95\% CI: [`r subgroup_lower[2]`,`r subgroup_upper[2]`]) for long time limits (3 years or longer). This was not a statistically significant difference (p-value = `r round(m_reg_cont_homeless_long_CM_Time_limit$pval[2],2)`). 
+
+
+### Figure `r counter` Homelessness outcomes 12 months or longer split by remote or in-person provision
+```{r eval=T,echo=F}
+include_graphics("/Users/markkelson/Dropbox/CHI/Code/Homelessness_long_CM_Remote.png")
+counter <- counter+1
+temp <- m_cont_homeless_long_CM_Remote
+temp_sum <- summary.meta(temp)
+subgroup_TE <- round(temp_sum$within.random$TE,2)
+subgroup_lower <- round(temp_sum$within.random$lower,2)
+subgroup_upper <- round(temp_sum$within.random$upper,2)
+```
+
+Figure `r counter-1` shows that remote/in-person subgroup effectiveness was `r subgroup_TE[1]` (95\% CI: [`r subgroup_lower[1]`,`r subgroup_upper[1]`]) for in-person provision, and  `r subgroup_TE[2]` (95\% CI: [`r subgroup_lower[2]`,`r subgroup_upper[2]`]) for when both in-person and remote were both used. Both of these subgroups demonstrated statistically significant differences from zero (indicating both models were effective at reducing homelesslessness) however the formal comparison between remote  and mixed ("Both") provision was not statistically significant (estimate: `r round(m_reg_cont_homeless_long_CM_Remote$beta[2],2)`, p-value: `r round(m_reg_cont_homeless_long_CM_Remote$pval[2],2)`, 95\% CI:[`r round(m_reg_cont_homeless_long_CM_Remote$ci.lb[2],2)`,`r round(m_reg_cont_homeless_long_CM_Remote$ci.ub[2],2)`]). 
+
+
+### Figure `r counter` Homelessness outcomes 12 months or longer split by complexity of need
+```{r eval=T,echo=F}
+include_graphics("/Users/markkelson/Dropbox/CHI/Code/Homelessness_long_CM_Complexity.png")
+counter <- counter+1
+temp <- m_cont_homeless_long_CM_Complexity
+temp_sum <- summary.meta(temp)
+subgroup_TE <- round(temp_sum$within.random$TE,2)
+subgroup_lower <- round(temp_sum$within.random$lower,2)
+subgroup_upper <- round(temp_sum$within.random$upper,2)
+```
+
+Figure `r counter-1` shows that complexity of need subgroup effectiveness was `r subgroup_TE[1]` (95\% CI: [`r subgroup_lower[1]`,`r subgroup_upper[1]`]) for medium complexity, and  `r subgroup_TE[2]` (95\% CI: [`r subgroup_lower[2]`,`r subgroup_upper[2]`]) for high complexity of need. There was not a statistically significant difference between these subgroups (estimate: `r round(m_reg_cont_homeless_long_CM_Complexity$beta[2],2)`, p-value: `r round(m_reg_cont_homeless_long_CM_Complexity$pval[2],2)`, 95\% CI:[`r round(m_reg_cont_homeless_long_CM_Complexity$ci.lb[2],2)`,`r round(m_reg_cont_homeless_long_CM_Complexity$ci.ub[2],2)`])
+
+### Figure `r counter` Metaregression of homelessness outcomes 12 months or longer by percentage of female
+```{r eval=T,echo=F}
+include_graphics("/Users/markkelson/Dropbox/CHI/Code/Homelessness_long_Perc_Female_bubble.png")
+counter <- counter+1
+```
+
+Figure `r counter-1` shows that there is no evidence of a relationship between homelessness outcomes and the percentage of female participants. The slope of the line of the relationship is extremely shallow (slope: `r round(m_reg_cont_homeless_long_Perc_Female$beta[2],3)`, p-value: `r round(m_reg_cont_homeless_long_Perc_Female$pval[2],2)` ). This indicates that there is no evidence that case management is differentially effective for homelessness outcomes when the proportion of female participants is higher or lower. 
+
+## Binary homelessness outcomes
+
+### Figure `r counter` Binary homelessness outcomes less than 12 months 
+```{r eval=T,echo=F}
+include_graphics("/Users/markkelson/Dropbox/CHI/Code/Homelessness_bin_short.png")
+counter <- counter+1
+temp <- m_bin_homeless_short
+temp_sum <- summary(temp)
+```
+
+Binary outcomes (i.e. when the outcome is expressed as a yes/no type of response) were explored for homelessness. Figure `r counter-1` supports the previous continuous analyses of homelessness outcomes and shows that case management of any type is associated with a reduced odds of homelessness at follow-ups less than 12 months (OR: `r round(exp(temp$TE.random),2)`, 95\% CI: [`r round(exp(temp_sum$random$lower),2)`, `r round(exp(temp_sum$random$upper),2)`] albeit not statistically significantly so (p-value: `r round(temp$pval.random,2)`). This means that the point estimate was that trial participants receiving case management were about `r round((1-exp(temp$TE.random))*100,0)`\% less likely to experience follow-up, however we are not confident that effect was not in fact detrimental to homelessness. 
+
+### Figure `r counter` Binary homelessness outcomes 12 months or longer 
+```{r eval=T,echo=F}
+include_graphics("/Users/markkelson/Dropbox/CHI/Code/Homelessness_bin_long.png")
+counter <- counter+1
+temp <- m_bin_homeless_long
+temp_sum <- summary(temp)
+```
+
+Figure `r counter-1` supports the previous continuous analyses of homelessness outcomes and shows that case management of any type is associated with a reduced odds of homelessness at follow-ups less than 12 months (OR: `r round(exp(temp$TE.random),2)`, 95\% CI:[`r round(exp(temp_sum$random$lower),2)`,`r round(exp(temp_sum$random$upper),2)`] ) which was statistically significant (p-value:`r p_report(round(temp$pval.random,2))`). This means that participants receiving case management typically had `r round((1-exp(temp$TE.random))*100,0)`\% reduced odds of being homeless at follow-up.
+
+## Generic inverse variance
+
+### Figure `r counter` Generic inverse variance homelessness outcomes 12 months or longer 
+```{r eval=T,echo=F}
+include_graphics("/Users/markkelson/Dropbox/CHI/Code/Gen_inv_Homelessness_long.png")
+counter <- counter+1
+temp <- m_geninv_homeless_long
+```
+
+To recap, the generic inverse variance approach augments the previous analyses by adding in studies that reported between group outcomes only (i.e. they did not report outcomes separated by randomised groups, but instead reported the just the difference between them). The generic inverse variance approach added `r m_geninv_homeless_long$k- m_cont_homeless_long$k` studies to the forest plot, but did not alter the conclusion the case management of any type improves homelessness outcomes. 
+
+### Figure `r counter` Generic inverse variance homelessness outcomes 12 months or longer split by case management
+
+```{r eval=T,echo=F}
+include_graphics("/Users/markkelson/Dropbox/CHI/Code/Gen_inv_Homelessness_long_CM_Type.png")
+counter <- counter+1
+temp <- m_geninv_homeless_long_CM_Type
+```
+
+Generic inverse variance analyses split by case management type did not alter the previous conclusions either. 
+
+
+## Mental Health Outcomes
+
+An important secondary outcome was mental health. This was almost considered a co-primary outcome for this analysis. 
+
+### Figure `r counter` Mental Health outcomes less than 12 months
+```{r eval=T,echo=F}
+include_graphics("/Users/markkelson/Dropbox/CHI/Code/MH_short.png")
+counter <- counter+1
+temp <- m_cont_MH_short
+```
+
+Figure `r counter-1` shows that the overall estimate of effectiveness was `r round(temp$TE.random,2)` (95\% CI: [`r round(temp$lower.random,2)`,`r round(temp$upper.random,2)`]), `r ifelse(temp$pval.random<0.05,"and was statistically significant","but was not statistically significant")` (p-value = `r round(temp$pval.random,3)`). Heterogeneity was `r ifelse(temp$I2>.7,"high","moderate")` ($I^2$=`r round(temp$I2,2)`). This indicates that case management overall was not effective at altering mental health outcomes in the short (less than 12 months) term. 
+
+### Figure `r counter` Mental Health outcomes 12 months or longer
+```{r eval=T,echo=F}
+include_graphics("/Users/markkelson/Dropbox/CHI/Code/MH_long.png")
+counter <- counter+1
+temp <- m_cont_MH_long
+```
+
+Figure `r counter-1` shows that the overall estimate of effectiveness was `r round(temp$TE.random,2)`  (95\% CI: [`r round(temp$lower.random,2)`,`r round(temp$upper.random,2)`]), `r ifelse(temp$pval.random<0.05,"and was statistically significant","but was not statistically significant")` (p-value = `r round(temp$pval.random,3)`). Heterogeneity was `r ifelse(temp$I2>.7,"high","moderate")` ($I^2$=`r round(temp$I2,2)`). Again, here this final diamond is almost perfectly on 0 (the point of no intervention effect). This indicates that case management overall was not effective at altering mental health over longer follow-ups (12 months or longer).
+
+
+### Figure `r counter` Mental Health outcomes 12 months or longer by case management type
+```{r eval=T,echo=F}
+include_graphics("/Users/markkelson/Dropbox/CHI/Code/MH_long_CM_Type.png")
+counter <- counter+1
+temp <- m_cont_MH_long_CM_Type
+temp_sum <- summary.meta(temp)
+subgroup_TE <- round(temp_sum$within.random$TE,2)
+subgroup_lower <- round(temp_sum$within.random$lower,2)
+subgroup_upper <- round(temp_sum$within.random$upper,2)
+```
+
+Figure `r counter-1` shows that case management type subgroup effectiveness was `r subgroup_TE[1]` (95\% CI: [`r subgroup_lower[1]`,`r subgroup_upper[1]`]) for Housing First, and  `r subgroup_TE[2]` (95\% CI: [`r subgroup_lower[2]`,`r subgroup_upper[2]`]) for Assertive Community Treatment, and `r subgroup_TE[3]` (95\% CI: [`r subgroup_lower[3]`,`r subgroup_upper[3]`]) for Intensive Case Management but none of these were statistically significantly different from 0.
+
+### Figure `r counter` Mental Health outcomes 12 months or longer by team or individual case management
+```{r eval=T,echo=F}
+include_graphics("/Users/markkelson/Dropbox/CHI/Code/MH_long_CM_Team.png")
+counter <- counter+1
+temp <- m_cont_MH_long_CM_Team
+temp_sum <- summary.meta(temp)
+subgroup_TE <- round(temp_sum$within.random$TE,2)
+subgroup_lower <- round(temp_sum$within.random$lower,2)
+subgroup_upper <- round(temp_sum$within.random$upper,2)
+```
+
+Figure `r counter-1` shows that team/individual subgroup effectiveness was `r subgroup_TE[2]`  (95\% CI: [`r subgroup_lower[2]`,`r subgroup_upper[2]`]) for individual case managers, and  `r round(temp$TE.random.w[3],2)` (95\% CI: [`r subgroup_lower[3]`,`r subgroup_upper[3]`]) for when there was a team of case managers but none of these were statistically significantly different from 0. 
+
+### Figure `r counter` Mental Health outcomes 12 months or longer by continuity of care
+```{r eval=T,echo=F}
+include_graphics("/Users/markkelson/Dropbox/CHI/Code/MH_long_CM_Continuity.png")
+counter <- counter+1
+temp <- m_cont_MH_long_CM_Continuity
+temp_sum <- summary.meta(temp)
+subgroup_TE <- round(temp_sum$within.random$TE,2)
+subgroup_lower <- round(temp_sum$within.random$lower,2)
+subgroup_upper <- round(temp_sum$within.random$upper,2)
+```
+
+Figure `r counter-1` shows that continuity of care subgroup effectiveness was `r subgroup_TE[2]`  (95\% CI: [`r subgroup_lower[2]`,`r subgroup_upper[2]`]) for named case managers, and  `r subgroup_TE[3]`  (95\% CI: [`r subgroup_lower[3]`,`r subgroup_upper[3]`]) for when there was no dedicated case manager but none of these were statistically significantly different from 0. 
+
+
+### Figure `r counter` Mental Health outcomes 12 months or longer by caseload
+```{r eval=T,echo=F}
+include_graphics("/Users/markkelson/Dropbox/CHI/Code/MH_long_CM_Caseload.png")
+counter <- counter+1
+temp <- m_cont_MH_long_CM_Caseload
+temp_sum <- summary.meta(temp)
+subgroup_TE <- round(temp_sum$within.random$TE,2)
+subgroup_lower <- round(temp_sum$within.random$lower,2)
+subgroup_upper <- round(temp_sum$within.random$upper,2)
+```
+
+Figure `r counter-1` shows that continuity of caseload subgroup effectiveness was `r subgroup_TE[1]`  (95\% CI: [`r subgroup_lower[1]`,`r subgroup_upper[1]`]) for medium case loads (8-20 people experiencing homelessness per case manager), and  `r subgroup_TE[2]`  (95\% CI: [`r subgroup_lower[2]`,`r subgroup_upper[2]`]) high case loads (21 or more people experiencing homelessness per case manager) but none of these were statistically significantly different from 0. 
+
+
+### Figure `r counter` Mental Health outcomes 12 months or longer by time limit of provision
+```{r eval=T,echo=F}
+include_graphics("/Users/markkelson/Dropbox/CHI/Code/MH_long_CM_Time_limit.png")
+counter <- counter+1
+temp <- m_cont_MH_long_CM_Time_limit
+temp_sum <- summary.meta(temp)
+subgroup_TE <- round(temp_sum$within.random$TE,2)
+subgroup_lower <- round(temp_sum$within.random$lower,2)
+subgroup_upper <- round(temp_sum$within.random$upper,2)
+```
+
+Figure `r counter-1` shows that time limit of provision subgroup effectiveness was `r subgroup_TE[1]` (95\% CI: [`r subgroup_lower[1]`,`r subgroup_upper[1]`]) for medium time limits (more than 6 months to less than 3 years), and  `r subgroup_TE[2]` (95\% CI: [`r subgroup_lower[2]`,`r subgroup_upper[2]`]) long time limits (3 years or longer) but none of these were statistically significantly different from 0 (the missing group did show statistically significant benefits, but this is difficult to interpret). 
+
+### Figure `r counter` Mental Health outcomes 12 months or longer by remote of in-person case management
+```{r eval=T,echo=F}
+include_graphics("/Users/markkelson/Dropbox/CHI/Code/MH_long_CM_Remote.png")
+counter <- counter+1
+temp <- m_cont_MH_long_CM_Remote
+temp_sum <- summary.meta(temp)
+subgroup_TE <- round(temp_sum$within.random$TE,2)
+subgroup_lower <- round(temp_sum$within.random$lower,2)
+subgroup_upper <- round(temp_sum$within.random$upper,2)
+```
+
+Figure `r counter-1` shows that in-person/remote provision subgroup effectiveness was `r subgroup_TE[1]` (95\% CI: [`r subgroup_lower[1]`,`r subgroup_upper[1]`]) for in-person provision, and  `r subgroup_TE[2]` (95\% CI: [`r subgroup_lower[2]`,`r subgroup_upper[2]`]) when both in-person and remote provision were used. 
+
+### Figure `r counter` Mental Health outcomes 12 months or longer by complexity of need
+```{r eval=T,echo=F}
+include_graphics("/Users/markkelson/Dropbox/CHI/Code/MH_long_CM_Complexity.png")
+counter <- counter+1
+temp <- m_cont_MH_long_CM_Complexity
+temp_sum <- summary.meta(temp)
+subgroup_TE <- round(temp_sum$within.random$TE,2)
+subgroup_lower <- round(temp_sum$within.random$lower,2)
+subgroup_upper <- round(temp_sum$within.random$upper,2)
+```
+
+Figure `r counter-1` shows that the complexity of need subgroup effectiveness was `r subgroup_TE[1]` (95\% CI: [`r subgroup_lower[1]`,`r subgroup_upper[1]`]) for medium complexity, and  `r subgroup_TE[2]` (95\% CI: [`r subgroup_lower[2]`,`r subgroup_upper[2]`]) high complexity, but none of these were statistically significantly different from 0. 
+
+### Figure `r counter` Metaregression of mental health outcomes 12 months or longer by percentage of female
+```{r eval=T,echo=F}
+include_graphics("/Users/markkelson/Dropbox/CHI/Code/MH_long_Perc_Female_bubble.png")
+counter <- counter+1
+```
+
+Figure `r counter-1` shows that despite the upward slope of this fitted line there is no statistically significant relationship between mental health outcomes and the proportion of female participants (slope:`r round(m_reg_cont_MH_long_Perc_Female$beta[2],3)`, p-value: `r round(m_reg_cont_MH_long_Perc_Female$pval[2],2)`).
+
+
+## Substance use Outcomes
+
+
+### Figure `r counter` Substance use outcomes less than 12 months 
+```{r eval=T,echo=F}
+include_graphics("/Users/markkelson/Dropbox/CHI/Code/SubstanceUse_short.png")
+counter <- counter+1
+temp <- m_cont_SubstanceUse_short
+```
+
+Figure `r counter-1` shows that there is no statistically significant effect of case management on substance use outcomes at follow-ups less than 12 months (estimate: `r round(temp$TE.random,2)`, 95\% CI: [`r round(temp$lower.random,2)`,`r round(temp$upper.random,2)`], p-value: `r round(temp$pval.random,2)`).
+
+### Figure `r counter` Substance use outcomes 12 months or longer
+```{r eval=T,echo=F}
+include_graphics("/Users/markkelson/Dropbox/CHI/Code/SubstanceUse_long.png")
+counter <- counter+1
+temp <- m_cont_SubstanceUse_long
+```
+
+Figure `r counter-1` shows that there is no statistically significant effect of case management on substance use outcomes at follow-ups 12 months or longer (estimate: `r round(temp$TE.random,2)`, 95\% CI: [`r round(temp$lower.random,2)`,`r round(temp$upper.random,2)`], p-value: `r round(temp$pval.random,2)`).
+
+
+## Physical health Outcomes
+
+
+### Figure `r counter` Physical health outcomes less than 12 months 
+```{r eval=T,echo=F}
+include_graphics("/Users/markkelson/Dropbox/CHI/Code/PhysicalHealth_short.png")
+counter <- counter+1
+temp <- m_cont_PhysicalHealth_short
+```
+
+Figure `r counter-1` shows that there is no statistically significant effect of case management on physical health outcomes at follow-ups less than 12 months (estimate: `r round(temp$TE.random,2)`, 95\% CI: [`r round(temp$lower.random,2)`,`r round(temp$upper.random,2)`], p-value: `r round(temp$pval.random,2)`).
+
+### Figure `r counter` Physical health outcomes 12 months or longer
+```{r eval=T,echo=F}
+include_graphics("/Users/markkelson/Dropbox/CHI/Code/PhysicalHealth_long.png")
+counter <- counter+1
+temp <- m_cont_PhysicalHealth_long
+```
+
+Figure `r counter-1` shows that there is no statistically significant effect of case management on physical health outcomes at follow-ups 12 months or longer (estimate: `r round(temp$TE.random,2)`, 95\% CI: [`r round(temp$lower.random,2)`,`r round(temp$upper.random,2)`], p-value: `r round(temp$pval.random,2)`).
+
+
+
+## Capabilities and wellbeing Outcomes
+
+### Figure `r counter` Capabilities and wellbeing outcomes less than 12 months 
+```{r eval=T,echo=F}
+include_graphics("/Users/markkelson/Dropbox/CHI/Code/CapabilitiesandWellbeing_short.png")
+counter <- counter+1
+temp <- m_cont_CapabilitiesandWellbeing_short
+```
+
+Figure `r counter-1` shows that there is a statistically significant effect of case management on Capabilities and Wellbeing outcomes at follow-ups less than 12 months (effect: `r round(m_cont_CapabilitiesandWellbeing_short$TE.random,2)`, 95\% CI: [`r round(temp$lower.random,2)`,`r round(temp$upper.random,2)`], p-value: `r p_report(round(m_cont_CapabilitiesandWellbeing_short$pval.random,2))`).
+
+### Figure `r counter` Capabilities and wellbeing outcomes 12 months or longer
+```{r eval=T,echo=F}
+include_graphics("/Users/markkelson/Dropbox/CHI/Code/CapabilitiesandWellbeing_long.png")
+counter <- counter+1
+temp <- m_cont_CapabilitiesandWellbeing_long
+```
+
+Figure `r counter-1` shows that there is no statistically significant effect of case management on Capabilities and Wellbeing outcomes at follow-ups 12 months or longer (estimate: `r round(temp$TE.random,2)`, 95\% CI: [`r round(temp$lower.random,2)`,`r round(temp$upper.random,2)`], p-value: `r round(temp$pval.random,2)`).
+
+
+## Employment Outcomes
+
+### Figure `r counter` Employment outcomes less than 12 months 
+```{r eval=T,echo=F}
+include_graphics("/Users/markkelson/Dropbox/CHI/Code/Employment_short.png")
+counter <- counter+1
+temp <- m_cont_Employment_short
+```
+
+Figure `r counter-1` shows that there is not a statistically significant effect of case management on employment outcomes at follow-ups less than 12 months (estimate: `r round(m_cont_Employment_short$TE.random,2)`, 95\% CI: [`r round(temp$lower.random,2)`,`r round(temp$upper.random,2)`], p-value: `r p_report(round(m_cont_Employment_short$pval.random,2))`).
+
+### Figure `r counter` Employment outcomes 12 months or longer
+```{r eval=T,echo=F}
+include_graphics("/Users/markkelson/Dropbox/CHI/Code/Employment_long.png")
+counter <- counter+1
+temp <- m_cont_Employment_long
+```
+
+Figure `r counter-1` shows that there is no statistically significant effect of case management on employment outcomes at follow-ups 12 months or longer (estimate: `r round(temp$TE.random,2)`, 95\% CI: [`r round(temp$lower.random,2)`,`r round(temp$upper.random,2)`], p-value: `r round(temp$pval.random,2)`).
+
